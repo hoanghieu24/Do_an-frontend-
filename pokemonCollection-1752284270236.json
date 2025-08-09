@@ -1,0 +1,18 @@
+[
+  {
+    "color": "default",
+    "type": "cyndaquil",
+    "size": "small",
+    "name": "Daisy",
+    "generation": "gen2",
+    "originalSpriteSize": 32
+  },
+  {
+    "color": "default",
+    "type": "golem",
+    "size": "small",
+    "name": "Golem",
+    "generation": "gen1",
+    "originalSpriteSize": 32
+  }
+]
