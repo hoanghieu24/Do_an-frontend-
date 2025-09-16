@@ -7,11 +7,6 @@
   :currentUser="currentUser"
   @favorite-updated="refreshFavorites"
 />
-
-
-
-
-
     <NavBar :user="currentUser" @open-chat="toggleChat" @show-login="toggleLogin" @logout="handleLogout" />
     <HiderAI ref="chatbot" />
     <MobileMenu :is-open="isMobileMenuOpen" @close="toggleMobileMenu" />

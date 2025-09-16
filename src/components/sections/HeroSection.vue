@@ -37,20 +37,34 @@
         </h1>
 
         <!-- Gradient Text with Glow -->
-        <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed">
-          <span class="inline-block opacity-0 animate-fade-in text-4xl md:text-5xl font-bold mb-4 tracking-wider"
-            style="animation-delay: 1s" :style="{
-              background: `linear-gradient(45deg, #ffffff, ${glowColor})`,
-              textShadow: `0 0 20px ${glowColor}`
-            }">
-            HIDEVERSE
-          </span>
-          <br>
-          <span v-for="(text, index) in subtitleTexts" :key="index" class="inline-block opacity-0 animate-fade-in"
-            :style="`animation-delay: ${1.3 + index * 0.3}s`">
-            {{ text }}
-          </span>
-        </p>
+      <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed group">
+  <!-- Logo + chữ -->
+  <span 
+    class="inline-flex items-center opacity-0 animate-fade-in text-4xl md:text-5xl font-bold mb-4 tracking-wider transition-transform duration-300 group-hover:scale-110"
+    style="animation-delay: 1s"
+  
+  >
+    <img 
+      src="@/assets/logo.png" 
+      alt="Logo"
+      class="w-24 h-24 mr-2"
+    />
+    HIDEVERSE
+  </span>
+
+  <br>
+
+  <!-- Subtitle -->
+  <span 
+    v-for="(text, index) in subtitleTexts" 
+    :key="index" 
+    class="inline-block opacity-0 animate-fade-in"
+    :style="`animation-delay: ${1.3 + index * 0.3}s`"
+  >
+    {{ text }}
+  </span>
+</p>
+
 
         <!-- 3D Buttons with Hover Effects -->
         <div class="flex flex-col sm:flex-row gap-4 justify-center">

@@ -70,6 +70,45 @@
               <span v-if="isActive('/manager-building')"
                 class="ml-auto h-2 w-2 rounded-full bg-cyan-300 animate-pulse"></span>
             </router-link>
+            
+            <router-link :to="{ name: 'ManagerBuilding' }"
+              class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all"
+              :class="isActive('/manager-building') ? 'bg-indigo-700 text-white shadow-md' : 'text-indigo-200 hover:bg-indigo-700 hover:text-white hover:shadow-md'">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              Quản lý Khách hàng 
+              <span v-if="isActive('/manager-building')"
+                class="ml-auto h-2 w-2 rounded-full bg-cyan-300 animate-pulse"></span>
+            </router-link>
+
+                        <router-link :to="{ name: 'ManagerBuilding' }"
+              class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all"
+              :class="isActive('/manager-building') ? 'bg-indigo-700 text-white shadow-md' : 'text-indigo-200 hover:bg-indigo-700 hover:text-white hover:shadow-md'">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              Quản lý Người dùng
+              <span v-if="isActive('/manager-building')"
+                class="ml-auto h-2 w-2 rounded-full bg-cyan-300 animate-pulse"></span>
+            </router-link>
+
+            <router-link :to="{ name: 'ManagerBuilding' }"
+              class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all"
+              :class="isActive('/manager-building') ? 'bg-indigo-700 text-white shadow-md' : 'text-indigo-200 hover:bg-indigo-700 hover:text-white hover:shadow-md'">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              Quản lý Hợp đồng 
+              <span v-if="isActive('/manager-building')"
+                class="ml-auto h-2 w-2 rounded-full bg-cyan-300 animate-pulse"></span>
+            </router-link>
 
             <router-link to="/profile" class="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all"
               :class="isActive('/profile') ? 'bg-indigo-700 text-white shadow-md' : 'text-indigo-200 hover:bg-indigo-700 hover:text-white hover:shadow-md'">

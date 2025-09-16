@@ -48,6 +48,11 @@ const routes = [
         name: 'ManagerBuilding',
         component: () => import('../components/admin/managerBuilding.vue')
       },
+        {
+        path: 'building-edit',
+        name: 'EditBuilding',
+        component: () => import('../components/admin/building-edit.vue')
+      },
       {
         path: 'profile',
         name: 'Profile',

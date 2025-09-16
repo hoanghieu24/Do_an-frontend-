@@ -6,15 +6,21 @@
         <!-- Logo với hiệu ứng tinh tế -->
         <router-link to="/" class="text-xl font-bold flex items-center group" @click="resetScroll">
           <span class="flex items-center">
+            <!-- Logo -->
+            <img src="@/assets/logo.png" alt="Logo"
+              class="w-24 h-24 mr-2 transition-transform duration-300 group-hover:scale-110" />
+
+            <!-- Chữ -->
             <span
               class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:from-indigo-700 group-hover:to-purple-700 transition-all duration-300">
-              <span class="inline-block transition-transform duration-300 group-hover:scale-110">Hider</span>
-              <span class="inline-block transition-transform duration-300 group-hover:scale-105">verse</span>
+              <span class="inline-block ">Hider</span>
+              <span class="inline-block ">verse</span>
             </span>
             <span
               class="ml-1.5 w-2 h-2 rounded-full bg-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
           </span>
         </router-link>
+
 
         <!-- Menu Desktop -->
         <div class="hidden md:flex items-center space-x-1">
@@ -169,7 +175,7 @@
 
                   <!-- Logout button -->
                   <div class="py-1.5 bg-gray-50">
-                    <button @click="logout"  
+                    <button @click="logout"
                       class="w-full flex items-center px-5 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150 group">
                       <svg class="w-4 h-4 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -308,7 +314,7 @@ const showLogoutModal = ref(false)
 // --- Logout ---
 const confirmLogout = () => {
   localStorage.removeItem('currentUser')
-  localStorage.setItem('justLoggedOut', 'true') 
+  localStorage.setItem('justLoggedOut', 'true')
   showLogoutModal.value = false
   window.location.reload()
 }
