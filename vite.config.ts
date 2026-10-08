@@ -1,12 +1,17 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import path from 'path' // <-- THÊM DÒNG NÀY
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+// Fix __dirname trong ESM
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src') // <-- THÊM PHẦN NÀY
+      '@': path.resolve(__dirname, './src')
     }
   },
   server: {
@@ -20,9 +25,21 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path
+        rewrite: (p) => p
       },
       '/login': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      },
+      '/vtour': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      },
+      '/uploads': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      },
+      '/img': {
         target: 'http://localhost:8080',
         changeOrigin: true
       }
