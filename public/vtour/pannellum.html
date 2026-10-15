@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <title>Hider Real Estate - VR360 Virtual Tour</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Self-hosted Pannellum 2.5.6 (No CDN) -->
+    <link rel="stylesheet" href="./lib/pannellum.css">
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --bg-dark: rgba(15, 23, 42, 0.85);
+            --border-glass: rgba(255, 255, 255, 0.15);
+            --text-light: #f8fafc;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: #090d16;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text-light);
+        }
+        #panorama {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        /* Top Navigation Header */
+        .top-bar {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            z-index: 20;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+        }
+        .building-brand {
+            pointer-events: auto;
+            background: var(--bg-dark);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glass);
+            border-radius: 9999px;
+            padding: 8px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+        .brand-badge {
+            background: var(--primary);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .building-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            max-width: 280px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .edit-badge {
+            display: none;
+            background: #f59e0b;
+            color: #000;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
+            pointer-events: auto;
+        }
+        .edit-mode .edit-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .top-actions {
+            pointer-events: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Glass Buttons */
+        .glass-btn {
+            background: var(--bg-dark);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-glass);
+            color: #fff;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .glass-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+        .glass-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        .glass-btn:active {
+            transform: translateY(0);
+        }
+        .glass-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Current Scene Information Box */
+        .scene-info-card {
+            position: absolute;
+            top: 76px;
+            left: 16px;
+            z-index: 20;
+            background: var(--bg-dark);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 12px 18px;
+            max-width: 340px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            pointer-events: auto;
+            transition: opacity 0.3s;
+        }
+        .scene-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+        .scene-desc {
+            font-size: 13px;
+            color: #cbd5e1;
+            line-height: 1.4;
+            max-height: 70px;
+            overflow-y: auto;
+        }
+
+        /* Controls Toolbar */
+        .controls-toolbar {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Bottom Thumbnail Carousel */
+        .bottom-shelf {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            background: var(--bg-dark);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 10px 16px;
+            max-width: 90vw;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+        }
+        .thumbs-container {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            max-width: 80vw;
+            padding: 4px 2px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) transparent;
+        }
+        .thumbs-container::-webkit-scrollbar {
+            height: 4px;
+        }
+        .thumbs-container::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        .thumb-card {
+            flex: 0 0 100px;
+            cursor: pointer;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            transition: all 0.25s ease;
+            text-align: center;
+        }
+        .thumb-img {
+            width: 100%;
+            height: 56px;
+            object-fit: cover;
+            display: block;
+        }
+        .thumb-name {
+            font-size: 11px;
+            padding: 4px 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+        .thumb-card:hover {
+            border-color: rgba(16, 185, 129, 0.6);
+            transform: translateY(-2px);
+        }
+        .thumb-card.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.7);
+            background: rgba(16, 185, 129, 0.2);
+        }
+        .thumb-card.active .thumb-name {
+            color: #34d399;
+            font-weight: 700;
+        }
+
+        /* Overlay Messages: Loading, Empty, Error */
+        .state-overlay {
+            position: absolute;
+            inset: 0;
+            background: #090d16;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .loader-ring {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .state-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        .state-desc {
+            font-size: 14px;
+            color: #94a3b8;
+            max-width: 400px;
+        }
+        .btn-retry {
+            margin-top: 16px;
+            padding: 8px 18px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Pannellum Hotspot Custom Tooltip Styling */
+        .pnlm-tooltip span {
+            background-color: var(--bg-dark) !important;
+            color: #fff !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+            border: 1px solid var(--border-glass) !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5) !important;
+        }
+        .pnlm-hotspot-base {
+            transition: transform 0.2s;
+        }
+        .pnlm-hotspot-base:hover {
+            transform: scale(1.25);
+        }
+
+        /* Responsive Mobile adjustments */
+        @media (max-width: 640px) {
+            .scene-info-card {
+                left: 10px;
+                right: 10px;
+                top: 65px;
+                max-width: none;
+            }
+            .controls-toolbar {
+                right: 10px;
+                gap: 6px;
+            }
+            .glass-btn {
+                width: 38px;
+                height: 38px;
+            }
+            .bottom-shelf {
+                bottom: 10px;
+                padding: 6px 10px;
+            }
+            .thumb-card {
+                flex: 0 0 80px;
+            }
+            .thumb-img {
+                height: 44px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading / Status Overlays -->
+    <div id="stateOverlay" class="state-overlay">
+        <div class="loader-ring" id="loaderRing"></div>
+        <div class="state-title" id="stateTitle">Đang tải Virtual Tour 360°...</div>
+        <div class="state-desc" id="stateDesc">Vui lòng chờ trong giây lát trong khi hình ảnh panorama được khởi tạo.</div>
+        <button id="retryBtn" class="btn-retry" style="display: none;">Thử lại</button>
+    </div>
+
+    <!-- Pannellum Container -->
+    <div id="panorama"></div>
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="building-brand">
+            <span class="brand-badge">VR 360</span>
+            <span class="building-title" id="buildingTitle">Virtual Tour</span>
+        </div>
+        <div class="edit-badge" id="editBadge">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+            </svg>
+            Chế độ Click đặt Hotspot
+        </div>
+        <div class="top-actions">
+            <button class="glass-btn" id="btnFullscreen" title="Toàn màn hình">
+                <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Current Scene Info -->
+    <div class="scene-info-card" id="sceneInfoCard" style="display: none;">
+        <div class="scene-title" id="sceneTitle">Tên phòng</div>
+        <div class="scene-desc" id="sceneDesc">Mô tả phòng</div>
+    </div>
+
+    <!-- Controls Toolbar -->
+    <div class="controls-toolbar">
+        <button class="glass-btn" id="btnZoomIn" title="Phóng to">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        </button>
+        <button class="glass-btn" id="btnZoomOut" title="Thu nhỏ">
+            <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+        </button>
+        <button class="glass-btn" id="btnResetView" title="Đặt lại góc nhìn">
+            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+        </button>
+        <button class="glass-btn" id="btnAutoRotate" title="Tự động xoay">
+            <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+        </button>
+        <button class="glass-btn" id="btnOrientation" title="Cảm biến xoay điện thoại" style="display: none;">
+            <svg viewBox="0 0 24 24"><path d="M16 1H8C6.34 1 5 2.34 5 4v16c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3V4c0-1.66-1.34-3-3-3zm1 19c0 .55-.45 1-1 1H8c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v16zm-5-2c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
+        </button>
+    </div>
+
+    <!-- Bottom Thumbnail Shelf -->
+    <div class="bottom-shelf" id="bottomShelf" style="display: none;">
+        <div class="thumbs-container" id="thumbsContainer"></div>
+    </div>
+
+    <!-- Self-hosted Pannellum Script -->
+    <script src="./lib/pannellum.js"></script>
+    <script>
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const buildingId = urlParams.get('buildingId');
+            const isEditMode = urlParams.get('edit') === '1';
+
+            if (isEditMode) {
+                document.body.classList.add('edit-mode');
+            }
+
+            const stateOverlay = document.getElementById('stateOverlay');
+            const loaderRing = document.getElementById('loaderRing');
+            const stateTitle = document.getElementById('stateTitle');
+            const stateDesc = document.getElementById('stateDesc');
+            const retryBtn = document.getElementById('retryBtn');
+            const buildingTitleEl = document.getElementById('buildingTitle');
+            const sceneInfoCard = document.getElementById('sceneInfoCard');
+            const sceneTitleEl = document.getElementById('sceneTitle');
+            const sceneDescEl = document.getElementById('sceneDesc');
+            const bottomShelf = document.getElementById('bottomShelf');
+            const thumbsContainer = document.getElementById('thumbsContainer');
+
+            let viewer = null;
+            let scenesData = [];
+            let pannellumScenes = {};
+            let isAutoRotating = false;
+
+            function showOverlay(title, desc, showSpinner, showRetry) {
+                stateOverlay.style.display = 'flex';
+                loaderRing.style.display = showSpinner ? 'block' : 'none';
+                stateTitle.textContent = title;
+                stateDesc.textContent = desc;
+                retryBtn.style.display = showRetry ? 'inline-block' : 'none';
+            }
+
+            function hideOverlay() {
+                stateOverlay.style.display = 'none';
+            }
+
+            retryBtn.addEventListener('click', loadTour);
+
+            if (!buildingId) {
+                showOverlay('Thiếu mã tòa nhà', 'Vui lòng cung cấp tham số ?buildingId=... trên đường dẫn để xem Virtual Tour.', false, false);
+                return;
+            }
+
+            function loadTour() {
+                showOverlay('Đang tải Virtual Tour...', 'Đang kết nối cơ sở dữ liệu và tải các phòng 360°...', true, false);
+
+                fetch(`/api/vr/${encodeURIComponent(buildingId)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Mã phản hồi từ máy chủ: ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!Array.isArray(data) || data.length === 0) {
+                            showOverlay('Chưa có cảnh VR360', 'Tòa nhà này hiện chưa có hình ảnh VR 360° nào. Vui lòng quay lại trang quản trị để thêm ảnh phòng.', false, true);
+                            return;
+                        }
+
+                        scenesData = data;
+                        initTour(data);
+                    })
+                    .catch(err => {
+                        console.error('Lỗi tải dữ liệu VR:', err);
+                        showOverlay('Không thể tải Virtual Tour', 'Đã xảy ra lỗi khi kết nối tới máy chủ. Vui lòng kiểm tra lại mạng hoặc thử lại.', false, true);
+                    });
+            }
+
+            function initTour(data) {
+                // Tiêu đề tòa nhà
+                if (data[0] && data[0].buildingName) {
+                    buildingTitleEl.textContent = data[0].buildingName;
+                }
+
+                pannellumScenes = {};
+
+                data.forEach(scene => {
+                    const sceneKey = 's' + scene.id;
+
+                    // Chuyển đổi danh sách hotspots
+                    const spots = (scene.hotspots || []).map(h => ({
+                        pitch: Number(h.pitch) || 0,
+                        yaw: Number(h.yaw) || 0,
+                        type: 'scene',
+                        text: h.text || ('Tới ' + (h.targetSceneName || 'phòng')),
+                        sceneId: 's' + h.targetSceneId
+                    }));
+
+                    pannellumScenes[sceneKey] = {
+                        title: scene.name || 'Phòng',
+                        description: scene.description || '',
+                        type: 'equirectangular',
+                        panorama: scene.imageUrl,
+                        autoLoad: true,
+                        hotSpots: spots
+                    };
+                });
+
+                renderThumbnails(data);
+
+                const firstSceneKey = 's' + data[0].id;
+
+                try {
+                    if (viewer) {
+                        viewer.destroy();
+                    }
+
+                    viewer = pannellum.viewer('panorama', {
+                        default: {
+                            firstScene: firstSceneKey,
+                            autoLoad: true,
+                            hfov: 110,
+                            minHfov: 50,
+                            maxHfov: 140,
+                            compass: false,
+                            autoRotate: 0,
+                            autoRotateInactivityDelay: 5000,
+                            showControls: false,
+                            orientationOnByDefault: false
+                        },
+                        scenes: pannellumScenes
+                    });
+
+                    viewer.on('load', function() {
+                        hideOverlay();
+                        updateSceneUI(viewer.getScene());
+                    });
+
+                    viewer.on('scenechange', function(newSceneId) {
+                        updateSceneUI(newSceneId);
+                    });
+
+                    viewer.on('error', function(errorMsg) {
+                        console.warn('Pannellum error:', errorMsg);
+                        hideOverlay();
+                    });
+
+                    // Chế độ Edit: Bắt sự kiện Click lên ảnh 360 để lấy tọa độ yaw, pitch
+                    if (isEditMode) {
+                        const container = document.getElementById('panorama');
+                        container.addEventListener('click', function(e) {
+                            if (!viewer) return;
+                            try {
+                                const coords = viewer.mouseEventToCoords(e);
+                                if (coords && coords.length >= 2) {
+                                    const currentSceneKey = viewer.getScene();
+                                    const sceneId = currentSceneKey ? parseInt(currentSceneKey.replace('s', ''), 10) : null;
+                                    const pitchVal = Number(coords[0].toFixed(2));
+                                    const yawVal = Number(coords[1].toFixed(2));
+
+                                    // Gửi tọa độ lên component cha Vue qua postMessage
+                                    if (window.parent && window.parent !== window) {
+                                        window.parent.postMessage({
+                                            type: 'vr-click',
+                                            sceneId: sceneId,
+                                            pitch: pitchVal,
+                                            yaw: yawVal
+                                        }, window.location.origin);
+                                    }
+                                }
+                            } catch (clickErr) {
+                                console.error('Lỗi tính tọa độ click:', clickErr);
+                            }
+                        });
+                    }
+
+                    // Kiểm tra hỗ trợ cảm biến thiết bị
+                    if (window.DeviceOrientationEvent && typeof viewer.getOrientation === 'function') {
+                        document.getElementById('btnOrientation').style.display = 'flex';
+                    }
+
+                } catch (e) {
+                    console.error('Lỗi khởi tạo Pannellum viewer:', e);
+                    showOverlay('Lỗi hiển thị Panorama', 'Trình duyệt không hỗ trợ WebGL hoặc hình ảnh không đọc được.', false, true);
+                }
+            }
+
+            function renderThumbnails(data) {
+                thumbsContainer.innerHTML = '';
+                data.forEach((scene, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'thumb-card' + (index === 0 ? ' active' : '');
+                    card.setAttribute('data-scene-id', 's' + scene.id);
+
+                    const img = document.createElement('img');
+                    img.className = 'thumb-img';
+                    img.src = scene.imageUrl;
+                    img.alt = scene.name;
+
+                    const name = document.createElement('div');
+                    name.className = 'thumb-name';
+                    name.textContent = scene.name;
+
+                    card.appendChild(img);
+                    card.appendChild(name);
+
+                    card.addEventListener('click', function() {
+                        const targetSceneKey = this.getAttribute('data-scene-id');
+                        if (viewer && targetSceneKey) {
+                            viewer.loadScene(targetSceneKey);
+                        }
+                    });
+
+                    thumbsContainer.appendChild(card);
+                });
+
+                bottomShelf.style.display = data.length > 1 ? 'block' : 'none';
+            }
+
+            function updateSceneUI(sceneKey) {
+                if (!sceneKey || !pannellumScenes[sceneKey]) return;
+                const scene = pannellumScenes[sceneKey];
+
+                // Cập nhật text an toàn bằng textContent (chống XSS)
+                sceneTitleEl.textContent = scene.title || '';
+                if (scene.description && scene.description.trim().length > 0) {
+                    sceneDescEl.textContent = scene.description.trim();
+                    sceneDescEl.style.display = 'block';
+                } else {
+                    sceneDescEl.style.display = 'none';
+                }
+                sceneInfoCard.style.display = 'block';
+
+                // Cập nhật thumbnail đang active
+                const cards = thumbsContainer.querySelectorAll('.thumb-card');
+                cards.forEach(c => {
+                    if (c.getAttribute('data-scene-id') === sceneKey) {
+                        c.classList.add('active');
+                        c.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    } else {
+                        c.classList.remove('active');
+                    }
+                });
+            }
+
+            // Giao tiếp với Component Vue cha khi nhận yêu cầu reload
+            window.addEventListener('message', function(event) {
+                if (event.origin !== window.location.origin) return;
+                if (event.data && event.data.type === 'reload-scenes') {
+                    loadTour();
+                }
+            });
+
+            // Nút điều khiển
+            document.getElementById('btnZoomIn').addEventListener('click', function() {
+                if (!viewer) return;
+                viewer.setHfov(Math.max(viewer.getHfov() - 15, 40));
+            });
+
+            document.getElementById('btnZoomOut').addEventListener('click', function() {
+                if (!viewer) return;
+                viewer.setHfov(Math.min(viewer.getHfov() + 15, 140));
+            });
+
+            document.getElementById('btnResetView').addEventListener('click', function() {
+                if (!viewer) return;
+                viewer.lookAt(0, 0, 110, 800);
+            });
+
+            document.getElementById('btnAutoRotate').addEventListener('click', function() {
+                if (!viewer) return;
+                isAutoRotating = !isAutoRotating;
+                viewer.setAutoRotate(isAutoRotating ? 2.5 : 0);
+                this.classList.toggle('active', isAutoRotating);
+            });
+
+            document.getElementById('btnFullscreen').addEventListener('click', function() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.warn('Không thể mở toàn màn hình:', err);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            const btnOrientation = document.getElementById('btnOrientation');
+            btnOrientation.addEventListener('click', function() {
+                if (!viewer) return;
+                try {
+                    if (viewer.isOrientationActive()) {
+                        viewer.stopOrientation();
+                        this.classList.remove('active');
+                    } else {
+                        viewer.startOrientation();
+                        this.classList.add('active');
+                    }
+                } catch (e) {
+                    console.warn('Orientation sensor error:', e);
+                }
+            });
+
+            // Khởi động tải tour
+            loadTour();
+        })();
+    </script>
+</body>
+</html>
