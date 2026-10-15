@@ -9,14 +9,6 @@
       "destination": "https://hiderbuildings-backend.onrender.com/uploads/$1"
     },
     {
-      "source": "/img/(.*)",
-      "destination": "https://hiderbuildings-backend.onrender.com/img/$1"
-    },
-    {
-      "source": "/vtour/(.*)",
-      "destination": "https://hiderbuildings-backend.onrender.com/vtour/$1"
-    },
-    {
       "source": "/j_spring_security_check",
       "destination": "https://hiderbuildings-backend.onrender.com/j_spring_security_check"
     },
