@@ -1,35 +1,141 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-cyan-50">
-  <PropertyCard
-  v-for="property in propertiesList"
-  :key="property.id"
-  :property="property"
-  :currentUser="currentUser"
-  @favorite-updated="refreshFavorites"
-/>
-    <NavBar :user="currentUser" @open-chat="toggleChat" @show-login="toggleLogin" @logout="handleLogout" />
-    <HiderAI ref="chatbot" />
+  <div class="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
+    <!-- Navbar + Chat -->
+    <NavBar
+      :user="currentUser"
+      @open-chat="toggleChat"
+      @show-login="openLoginModal"
+      @logout="handleLogout"
+    />
+
+  
     <MobileMenu :is-open="isMobileMenuOpen" @close="toggleMobileMenu" />
 
+    <!-- Main Content -->
     <main class="flex-grow">
       <component :is="isHomePage ? HomePageContent : 'router-view'" />
     </main>
 
+    <!-- Footer + Chat Box -->
     <FooterSection />
-    <ChatBox :is-open="isChatOpen" :messages="chatMessages" @send-message="sendMessage" @close="toggleChat" />
+    <ChatBox
+      :is-open="isChatOpen"
+      :user="currentUser"
+      :target-building="selectedChatBuilding"
+      @close="toggleChat"
+      @request-login="openLoginModal"
+      @open-building="handleOpenBuildingFromChat"
+    />
 
+    <!-- ================== MODALS ================== -->
+
+    <!-- 🔹 Login Modal -->
     <transition name="fade">
-      <LoginModal v-if="isLoginOpen" @closed="toggleLogin" @login-success="handleLoginSuccess" />
+      <LoginModal
+        v-if="isLoginOpen"
+        @closed="closeLoginModal"
+        @login-success="handleLoginSuccess"
+        @open-register="openRegisterModal"
+        @open-forgot="openForgotPassword"
+      />
     </transition>
 
-    <PropertyModal v-if="showModal" :property="selectedProperty" @close="closeModal" />
+    <!-- 🔹 Register Modal -->
+    <transition name="fade">
+      <RegisterModal
+        v-if="isRegisterOpen"
+        @close="isRegisterOpen = false"
+        @switch-to-login="openLoginModal"
+      />
+    </transition>
+
+    <transition name="fade">
+      <ForgotPasswordForm
+        v-if="showForgot"
+        @close="showForgot = false"
+        @switch-to-login="openLoginModal"
+      />
+    </transition>
+
+    <PropertyModal
+      v-if="showModal"
+      :property="selectedProperty"
+      @close="closeModal"
+      @chat-with-broker="handleChatWithBroker"
+    />
+    
+    <!-- Snow Container -->
+    <div id="snow-container" class="hidden pointer-events-none fixed inset-0 z-[9998]"></div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, computed, watch, onMounted, provide } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import { onUnmounted } from 'vue'
+
+const isDark = ref(false)
+const snowContainer = ref(null)
+let snowInterval = null
+
+const toggleTheme = () => {
+  const html = document.documentElement
+  if (html.classList.contains('dark')) {
+    html.classList.remove('dark')
+    localStorage.setItem('theme', 'light')
+    isDark.value = false
+  } else {
+    html.classList.add('dark')
+    localStorage.setItem('theme', 'dark')
+    isDark.value = true
+  }
+}
+
+function createSnowflake() {
+  if (!snowContainer.value) return
+  const snowflake = document.createElement('div')
+  snowflake.classList.add('snowflake')
+  snowflake.textContent = '❄'
+  snowflake.style.left = Math.random() * 100 + 'vw'
+  snowflake.style.animationDuration = (Math.random() * 3 + 2) + 's'
+  snowflake.style.opacity = Math.random()
+  snowflake.style.fontSize = Math.random() * 16 + 10 + 'px'
+  snowContainer.value.appendChild(snowflake)
+
+  setTimeout(() => {
+    snowflake.remove()
+  }, 5000)
+}
+
+function startSnowEffect() {
+  if (!snowContainer.value) return
+  if (snowInterval) return // tránh lặp
+  snowContainer.value.classList.remove('hidden')
+  snowInterval = setInterval(createSnowflake, 150)
+}
+
+function stopSnowEffect() {
+  if (!snowContainer.value) return
+  snowContainer.value.classList.add('hidden')
+  clearInterval(snowInterval)
+  snowInterval = null
+}
+onMounted(() => {
+  snowContainer.value = document.getElementById('snow-container')
+  const mode = localStorage.getItem('festivalMode')
+  if (mode === 'true') startSnowEffect()
+  else stopSnowEffect()
+
+  const savedTheme = localStorage.getItem('theme')
+  if (savedTheme === 'dark') {
+    document.documentElement.classList.add('dark')
+    isDark.value = true
+  }
+
+  if (currentUser.value) fetchFavourites()
+})
 
 // Components
 import NavBar from './components/common/Nav.vue'
@@ -37,224 +143,202 @@ import MobileMenu from './components/MobileMenu.vue'
 import FooterSection from './components/FooterSection.vue'
 import ChatBox from './components/ChatBox.vue'
 import LoginModal from './views/login.vue'
+import RegisterModal from './views/signup.vue'
 import PropertyModal from './components/property/PropertyModal.vue'
-import ResetButton from './components/common/reset.vue'
 import HiderAI from './components/HiderAI.vue'
 import HomePageContent from './components/page/HomePageContent.vue'
 import { properties } from './data/properties'
+import ForgotPasswordForm from './views/ForgotPasswordForm.vue'
+import PropertySearchWrapper from './components/property/PropertySearchWrapper.vue'
 
 // Route & Page
 const route = useRoute()
 const isHomePage = computed(() => route.path === '/')
-const user = JSON.parse(localStorage.getItem("user"))
-
+const showForgot = ref(false)
 // State
 const currentUser = ref(null)
-const favoriteIds = ref([]) // ⭐ Đây là state trung tâm để track favorite IDs
+const favoriteIds = ref([])
 const favourites = ref([])
-
 const isMobileMenuOpen = ref(false)
 const isChatOpen = ref(false)
 const isLoginOpen = ref(false)
+const isRegisterOpen = ref(false)
 const chatMessages = ref([])
 const searchCriteria = ref({})
 const propertiesData = ref(properties)
 const showModal = ref(false)
 const selectedProperty = ref(null)
-const chatbot = ref(null)
 
-// Load user từ localStorage
-const savedUser = localStorage.getItem('currentUser')
-if (savedUser) {
-  currentUser.value = JSON.parse(savedUser)
+// Load user từ localStorage an toàn
+const getStoredUser = () => {
+  try {
+    const raw = localStorage.getItem('currentUser') || localStorage.getItem('user')
+    if (raw && raw !== 'undefined' && raw !== 'null') {
+      return JSON.parse(raw)
+    }
+  } catch (e) {
+    console.error('Lỗi parse stored user:', e)
+  }
+  return null
 }
+currentUser.value = getStoredUser()
 
-// ⭐ Hàm toggleFavorite chính - cập nhật favoriteIds reactive
+// Favorite logic
 const toggleFavorite = async (buildingId) => {
-  if (!currentUser.value?.id) {
-    console.warn('❌ Không có customerId để toggle favorite')
+  const uid = currentUser.value?.id
+  if (!uid) {
+    console.warn('❌ Không có userId để toggle favorite')
     return
   }
-
-  const customerId = currentUser.value.id
   const isCurrentlyFavorite = favoriteIds.value.includes(buildingId)
-
   try {
+    const payload = { userId: uid, customerId: uid, buildingId }
     if (isCurrentlyFavorite) {
-      // Xóa khỏi yêu thích
-      await axios.post('http://localhost:8080/api/buildings/favorites/remove', {
-        customerId,
-        buildingId
-      })
-      
-      // Cập nhật local state
+      await axios.post('/api/buildings/favorites/remove', payload)
       favoriteIds.value = favoriteIds.value.filter(id => id !== buildingId)
       favourites.value = favourites.value.filter(b => b.id !== buildingId)
-      
-      console.log('✅ Đã xóa khỏi yêu thích:', buildingId)
     } else {
-      // Thêm vào yêu thích
-      await axios.post('http://localhost:8080/api/buildings/favorites', {
-        customerId,
-        buildingId
-      })
-      
-      // Cập nhật local state
+      await axios.post('/api/buildings/favorites', payload)
       favoriteIds.value.push(buildingId)
-      
-      console.log('✅ Đã thêm vào yêu thích:', buildingId)
     }
-    
-    return !isCurrentlyFavorite // Trả về trạng thái mới
   } catch (error) {
     console.error('❌ Lỗi toggle favorite:', error)
-    throw error
   }
 }
 
-// ⭐ Hàm để force refresh favorites từ server
-const refreshFavorites = async () => {
-  await fetchFavourites()
-}
+const refreshFavorites = async () => fetchFavourites()
 
-// ⭐ provide xuống các component con
 provide('toggleFavorite', toggleFavorite)
 provide('refreshFavorites', refreshFavorites)
-provide('favoriteIds', favoriteIds) // Provide reactive favoriteIds
+provide('favoriteIds', favoriteIds)
 provide('customerId', computed(() => currentUser.value?.id || null))
 provide('openPropertyModal', (property) => {
   selectedProperty.value = property
   showModal.value = true
 })
 
-// Fetch danh sách toà nhà yêu thích
 const fetchFavourites = async () => {
-  if (!currentUser.value?.id) {
-    favoriteIds.value = []
-    favourites.value = []
-    return
-  }
-  
+  const uid = currentUser.value?.id
+  if (!uid) return
   try {
-    const response = await axios.get(`http://localhost:8080/api/buildings/favorites/${currentUser.value.id}`)
+    const response = await axios.get(`/api/buildings/favorites/${uid}`)
     const favs = response.data || []
-    
-    // Cập nhật favoriteIds
     favoriteIds.value = favs.map(f => f.buildingId)
-
-    // Lấy chi tiết tòa nhà
-    const buildingDetails = await Promise.all(
-      favs.map(async (fav) => {
-        try {
-          const res = await axios.get(`http://localhost:8080/api/buildings/${fav.buildingId}`)
-          return res.data
-        } catch (error) {
-          console.error(`❌ Lỗi lấy chi tiết building ${fav.buildingId}:`, error)
-          return null
-        }
-      })
-    )
-    
-    favourites.value = buildingDetails.filter(b => b && b.id)
-    console.log('✅ Đã load favorites:', favoriteIds.value)
   } catch (error) {
     console.error('❌ Fetch favourite lỗi:', error)
-    favoriteIds.value = []
-    favourites.value = []
   }
 }
 
-// Computed properties
 const filteredProperties = computed(() => {
   return propertiesData.value.filter(property => {
     return Object.entries(searchCriteria.value).every(([key, value]) => {
       if (!value) return true
-      if (key === 'price') {
-        const price = parseFloat(property.price.replace(/[^\d.]/g, ''))
-        const [min, max] = value.split('-').map(Number)
-        return price >= min && (!max || price <= max)
-      }
-      return property[key].toString().toLowerCase().includes(value.toLowerCase())
+      return property[key]?.toString().toLowerCase().includes(value.toLowerCase())
     })
   })
 })
 
-// Computed để tính danh sách properties với trạng thái favorite
-const propertiesList = computed(() => {
-  return filteredProperties.value.map(property => ({
+const propertiesList = computed(() =>
+  filteredProperties.value.map(property => ({
     ...property,
     isFavorite: favoriteIds.value.includes(property.id)
   }))
-})
+)
 
-// Watcher
+// UI & Chat
 watch(isLoginOpen, (newVal) => {
   document.body.style.overflow = newVal ? 'hidden' : 'auto'
 })
 
-// Mounted
-onMounted(() => {
-  if (currentUser.value) {
-    fetchFavourites()
-  }
-})
 
-// Methods
-const toggleMobileMenu = () => {
-  isMobileMenuOpen.value = !isMobileMenuOpen.value
-}
+const selectedChatBuilding = ref(null)
 
+const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value
 const toggleChat = () => {
+  if (isChatOpen.value) {
+    selectedChatBuilding.value = null
+  }
   isChatOpen.value = !isChatOpen.value
 }
 
-const toggleLogin = () => {
-  isLoginOpen.value = !isLoginOpen.value
-}
-
-const handleSearch = (criteria) => {
-  searchCriteria.value = criteria
-}
-
-const sendMessage = (message) => {
-  chatMessages.value.push({
-    text: message,
-    sender: 'user',
-    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  })
-
-  setTimeout(() => {
-    chatMessages.value.push({
-      text: 'Cảm ơn tin nhắn của bạn. Chúng tôi sẽ phản hồi sớm nhất có thể.',
-      sender: 'agent',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    })
-  }, 1000)
-}
-
-const handleLoginSuccess = ({ username, roles, fullname, id }) => {
-  const user = {
-    id,
-    username,
-    roles,
-    fullname: Array.isArray(fullname) ? fullname[0] : fullname
+const handleChatWithBroker = (buildingData) => {
+  if (!currentUser.value) {
+    openLoginModal()
+    return
   }
+  showModal.value = false
+  selectedChatBuilding.value = { ...buildingData, _ts: Date.now() }
+  isChatOpen.value = true
+}
+
+const handleOpenBuildingFromChat = async (buildingId) => {
+  try {
+    const res = await axios.get(`/api/buildings/${buildingId}`)
+    selectedProperty.value = res.data || { id: buildingId }
+  } catch (e) {
+    selectedProperty.value = { id: buildingId }
+  }
+  showModal.value = true
+}
+
+provide('openBrokerChat', handleChatWithBroker)
+
+// 🔹 Modal logic
+const openLoginModal = () => {
+  isRegisterOpen.value = false
+  showForgot.value = false
+  isLoginOpen.value = true
+}
+
+const closeLoginModal = () => {
+  isLoginOpen.value = false
+}
+
+const handleSearch = (criteria) => searchCriteria.value = criteria
+
+const openRegisterModal = () => {
+  isLoginOpen.value = false
+  isRegisterOpen.value = true
+}
+
+const closeRegisterModal = () => {
+  isRegisterOpen.value = false
+}
+
+const openForgotPassword = () => {
+  isLoginOpen.value = false
+  showForgot.value = true
+}
+
+const handleLoginSuccess = (userData) => {
+  const { id, username, roles, fullname, avatar, email, phone, token } = userData
+  if (token) {
+    localStorage.setItem('token', token)
+  }
+  const user = { id, username, roles, fullname, avatar, email, phone }
   localStorage.setItem('currentUser', JSON.stringify(user))
+  localStorage.setItem('user', JSON.stringify(user))
   currentUser.value = user
   isLoginOpen.value = false
   fetchFavourites()
 }
 
 const handleLogout = () => {
+  localStorage.removeItem('token')
   localStorage.removeItem('currentUser')
+  localStorage.removeItem('user')
+  localStorage.removeItem('authToken')
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('favorites')
   currentUser.value = null
   favoriteIds.value = []
   favourites.value = []
 }
 
-const closeModal = () => {
-  showModal.value = false
-}
+const closeModal = () => showModal.value = false
+onUnmounted(() => {
+  stopSnowEffect()
+})
 </script>
 
 <style>
@@ -267,14 +351,23 @@ const closeModal = () => {
 .fade-leave-to {
   opacity: 0;
 }
-
-.modal-overlay {
+.snowflake {
+  position: fixed;
+  top: -10px;
+  color: white;
+  user-select: none;
+  pointer-events: none;
+  animation: fall linear forwards;
   z-index: 9999;
 }
 
-body.modal-open {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
+@keyframes fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+  }
 }
+
 </style>

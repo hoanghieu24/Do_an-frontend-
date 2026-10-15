@@ -169,7 +169,7 @@
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 placeholder="0123456789">
             </div>
-            <div v-if="userRole === 'MANAGER'">
+            <div v-if="userRole === 'ROLE_MANAGER'">
               <label class="block text-sm font-medium text-gray-700 mb-1">Nhân viên phụ trách</label>
               <select v-model="searchParams.staffId"
                 class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
@@ -233,7 +233,7 @@
           Danh sách tòa nhà
         </h3>
         <div class="mt-3 md:mt-0 space-x-2">
-          <button v-if="userRole === 'MANAGER'" @click="deleteSelectedBuildings"
+          <button v-if="userRole === 'ROLE_MANAGER'" @click="deleteSelectedBuildings"
             :disabled="selectedBuildings.length === 0"
             class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
@@ -293,8 +293,11 @@
               <th scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Phí MG
               </th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Thao tác</th>
+              <th scope="col"
+                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-white z-10">
+                Thao tác
+              </th>
+
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -338,9 +341,10 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                 {{ formatCurrency(building.brokerage_fee) }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <td class="px-6 py-4 whitespace-nowrap text-right sticky right-0 bg-white z-10">
                 <div class="flex justify-end space-x-2">
-                  <router-link :to="'/admin/building-edit-' + building.id" class="text-blue-600 hover:text-blue-900">
+                  <router-link :to="'/admin/building-edit-new-' + building.id"
+                    class="text-blue-600 hover:text-blue-900">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                       stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -348,8 +352,7 @@
                     </svg>
                   </router-link>
 
-                  <button v-if="userRole === 'MANAGER'" @click="confirmDeleteBuilding(building.id)"
-                    class="text-red-600 hover:text-red-900">
+                  <button @click="confirmDeleteBuilding(building.id)" class="text-red-600 hover:text-red-900">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                       stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -357,7 +360,7 @@
                     </svg>
                   </button>
 
-                  <button v-if="userRole === 'MANAGER'" @click="showAssignmentModal(building.id)"
+                  <button v-if="userRole === 'ROLE_MANAGER'" @click="showAssignmentModal(building.id)"
                     class="text-indigo-600 hover:text-indigo-900">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                       stroke="currentColor">
@@ -432,7 +435,7 @@
     </div>
 
     <!-- Assignment Modal -->
-    <div class="fixed z-10 inset-0 overflow-y-auto" v-if="showAssignmentModal" aria-labelledby="modal-title"
+    <div class="fixed z-10 inset-0 overflow-y-auto" v-if="isShowAssignmentModal" aria-labelledby="modal-title"
       role="dialog" aria-modal="true">
       <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
@@ -453,7 +456,7 @@
               </div>
               <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                 <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                  Giao tòa nhà cho nhân viên
+                  Giao tòa nhà cho nhân viên quản lý
                 </h3>
                 <div class="mt-2">
                   <div class="alert alert-info bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
@@ -467,7 +470,8 @@
                       </div>
                       <div class="ml-3">
                         <p class="text-sm text-blue-700">
-                          Chọn nhân viên sẽ phụ trách tòa nhà này
+                          Chọn nhân viên sẽ phụ trách quản lý tòa nhà "<strong>{{ getBuildingName(currentBuildingId)
+                          }}</strong>"
                         </p>
                       </div>
                     </div>
@@ -484,13 +488,16 @@
                           </th>
                           <th scope="col"
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên
-                            nhân
-                            viên</th>
+                            nhân viên</th>
                           <th scope="col"
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email
                           </th>
                           <th scope="col"
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SĐT
+                          </th>
+                          <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vai
+                            trò
                           </th>
                         </tr>
                       </thead>
@@ -505,20 +512,26 @@
                               <div class="flex-shrink-0 h-10 w-10">
                                 <div
                                   class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
-                                  {{ staff.name.charAt(0) }}
+                                  {{ staff.fullName?.charAt(0) || 'U' }}
                                 </div>
                               </div>
                               <div class="ml-4">
-                                <div class="text-sm font-medium text-gray-900">{{ staff.name }}</div>
-                                <div class="text-sm text-gray-500">{{ staff.position }}</div>
+                                <div class="text-sm font-medium text-gray-900">{{ staff.fullName }}</div>
+                                <div class="text-sm text-gray-500">{{ staff.position || 'Nhân viên' }}</div>
                               </div>
                             </div>
                           </td>
                           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ staff.email }}
+                            {{ staff.email || 'Chưa có email' }}
                           </td>
                           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ staff.phone }}
+                            {{ staff.phone || 'Chưa có SĐT' }}
+                          </td>
+                          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span
+                              class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              {{ staff.role || 'STAFF' }}
+                            </span>
                           </td>
                         </tr>
                       </tbody>
@@ -529,15 +542,15 @@
             </div>
           </div>
           <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button type="button" @click="saveAssignment"
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+            <button type="button" @click="saveAssignment" :disabled="selectedStaffs.length === 0"
+              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto sm:text-sm">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              Lưu thay đổi
+              Lưu phân công
             </button>
-            <button type="button" @click="closeModal"
+            <button type="button" @click="closeAssignmentModal"
               class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
@@ -709,16 +722,22 @@ export default {
       selectedStaffs: [],
       currentBuildingId: null,
       buildingToDelete: null,
-      userRole: 'MANAGER',
+      userRole: '',
       successMessage: '',
-      showAssignmentModal: false,
+      isShowAssignmentModal: false,
       showDeleteModal: false,
-      showSuccessNotification: false
+      showSuccessNotification: false,
+      isAssigning: false
     };
   },
   computed: {
+    userRole() {
+      const user = JSON.parse(localStorage.getItem("currentUser"));
+      if (!user || !user.roles || user.roles.length === 0) return null;
+      return user.roles[0]; // "ROLE_STAFF" hoặc "ROLE_MANAGER"  // hoặc lấy từ store
+    },
     visiblePages() {
-      const range = 2; // Number of pages to show before and after current page
+      const range = 2;
       const start = Math.max(1, this.currentPage - range);
       const end = Math.min(this.totalPages, this.currentPage + range);
 
@@ -735,49 +754,130 @@ export default {
   },
   methods: {
     fetchInitialData() {
-  axios.all([
-    axios.get('/api/buildings/districts'),
-    axios.get('/api/buildings/rent-types'),
-    axios.get('/api/buildings/staffs')
-  ])
-  .then(axios.spread((districtsRes, rentTypesRes, staffsRes) => {
-    this.districts = districtsRes.data;
-    this.rentTypes = rentTypesRes.data;
-    this.staffs = staffsRes.data;
-    this.allStaffs = staffsRes.data;
-
-    alert("✅ Đã tải dữ liệu ban đầu thành công!");
-    console.log("🏙️ Quận:", this.districts);
-  }))
-  .catch(error => {
-    console.error('🚨 Lỗi khi tải dữ liệu:', error);
-    alert("❌ Lỗi khi tải dữ liệu!");
-  });
+      axios.all([
+        axios.get('/api/buildings/districts'),
+        axios.get('/api/buildings/rent-types'),
+        axios.get('/api/buildings/staffs')
+      ])
+        .then(axios.spread((districtsRes, rentTypesRes, staffsRes) => {
+          this.districts = districtsRes.data;
+          this.rentTypes = rentTypesRes.data;
+          this.staffs = staffsRes.data;
+          this.allStaffs = staffsRes.data;
+        }))
+        .catch(error => {
+          console.error('🚨 Lỗi khi tải dữ liệu:', error);
+          this.showError("❌ Lỗi khi tải dữ liệu!");
+        });
     },
+
     loadBuildings() {
       const params = {
         ...this.searchParams,
         page: this.currentPage - 1,
         size: this.itemsPerPage,
-        typeCode: this.searchParams.typeCode.join(',')
+        typeCode: Array.isArray(this.searchParams.typeCode) ? this.searchParams.typeCode.join(',') : ''
       };
+
+      // Xóa các param rỗng
+      Object.keys(params).forEach(key => {
+        if (params[key] === '' || params[key] === null || params[key] === undefined) {
+          delete params[key];
+        }
+      });
 
       axios.get('/api/buildings', { params })
         .then(res => {
-          if (res.data.length === 0) {
-            alert("❗ Không tìm thấy tòa nhà nào phù hợp.");
-          }
-          this.buildings = res.data;
+          this.buildings = res.data.content || res.data;
+          this.totalItems = res.data.totalElements || res.data.length;
+          this.totalPages = res.data.totalPages || Math.ceil(this.totalItems / this.itemsPerPage);
         })
         .catch(error => {
           console.error('🚨 Lỗi khi tải danh sách tòa nhà:', error);
-          alert("⚠️ Đã xảy ra lỗi khi gọi dữ liệu, vui lòng thử lại.");
+          this.showError("⚠️ Đã xảy ra lỗi khi gọi dữ liệu, vui lòng thử lại.");
         });
     },
+
+    // Sửa phương thức showAssignmentModal
+    showAssignmentModal(buildingId) {
+      this.currentBuildingId = buildingId;
+      this.selectedStaffs = [];
+      this.isShowAssignmentModal = true;
+
+      //  if (this.allStaffs.length > 0) {
+      //     this.selectedStaffs =[this.allStaffs[1].id];
+      //    }
+
+      axios.get(`/api/buildings/staffs/${buildingId}`)
+        .then(res => {
+          const staffs = res.data.data;   // vì BE trả trong data
+
+          this.selectedStaffs = staffs
+            .filter(s => s.checked === "checked")
+            .map(s => s.staffId);         // ⚠️ staffId, không phải id
+
+          console.log("✔ Staff được tick:", this.selectedStaffs);
+        });
+
+    },
+
+    // Sửa phương thức saveAssignment
+    async saveAssignment() {
+      if (!this.currentBuildingId || this.selectedStaffs.length === 0) {
+        this.showError("Vui lòng chọn ít nhất một nhân viên để phân công");
+        return;
+      }
+
+      try {
+        this.isAssigning = true;
+
+        const assignmentData = {
+          buildingId: this.currentBuildingId,
+          staffs: this.selectedStaffs
+        };
+
+        await axios.put('/api/buildings/staffs', assignmentData);
+
+        this.showSuccess(`Đã giao tòa nhà cho ${this.selectedStaffs.length} nhân viên quản lý thành công!`);
+        this.closeAssignmentModal();
+        this.loadBuildings(); // Reload để cập nhật dữ liệu
+      } catch (error) {
+        console.error('Error saving assignment:', error);
+        this.showError('Có lỗi xảy ra khi giao tòa nhà cho nhân viên');
+      } finally {
+        this.isAssigning = false;
+      }
+    },
+
+    // Thêm phương thức closeAssignmentModal
+    closeAssignmentModal() {
+      this.isShowAssignmentModal = false;
+      this.currentBuildingId = null;
+      this.selectedStaffs = [];
+      this.selectAllStaffs = false;
+    },
+
+    // Thêm phương thức getBuildingName
+    getBuildingName(buildingId) {
+      const building = this.buildings.find(b => b.id === buildingId);
+      return building ? building.nameBuilding : 'Tòa nhà';
+    },
+
+    // Sửa phương thức toggleSelectAllStaffs
+    toggleSelectAllStaffs() {
+      if (this.selectAllStaffs) {
+        this.selectedStaffs = this.allStaffs.map(staff => staff.id);
+      } else {
+        this.selectedStaffs = [];
+      }
+    },
+
+    // Các phương thức khác giữ nguyên
     searchBuildings() {
       this.currentPage = 1;
       this.loadBuildings();
     },
+
     resetSearch() {
       this.searchParams = {
         name: '',
@@ -799,6 +899,7 @@ export default {
       };
       this.searchBuildings();
     },
+
     toggleSelectAll() {
       if (this.selectAll) {
         this.selectedBuildings = this.buildings.map(building => building.id);
@@ -806,64 +907,33 @@ export default {
         this.selectedBuildings = [];
       }
     },
-    toggleSelectAllStaffs() {
-      if (this.selectAllStaffs) {
-        this.selectedStaffs = this.allStaffs.map(staff => staff.id);
-      } else {
-        this.selectedStaffs = [];
-      }
-    },
+
     prevPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
         this.loadBuildings();
       }
     },
+
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
         this.loadBuildings();
       }
     },
+
     goToPage(page) {
       if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
         this.currentPage = page;
         this.loadBuildings();
       }
     },
-    showAssignmentModal(buildingId) {
-      this.currentBuildingId = buildingId;
-      this.selectedStaffs = [];
-      this.showAssignmentModal = true;
 
-      axios.get(`/api/buildings/${buildingId}/staffs`)
-        .then(response => {
-          this.selectedStaffs = response.data.map(staff => staff.id);
-          this.selectAllStaffs = this.selectedStaffs.length === this.allStaffs.length;
-        })
-        .catch(error => {
-          console.error('Error loading staff assignments:', error);
-        });
-    },
-    saveAssignment() {
-      const data = {
-        buildingId: this.currentBuildingId,
-        staffIds: this.selectedStaffs
-      };
-
-      axios.put('/api/buildings/assign-staff', data)
-        .then(() => {
-          this.showSuccess('Giao tòa nhà thành công!');
-          this.showAssignmentModal = false;
-        })
-        .catch(error => {
-          console.error('Error saving assignment:', error);
-        });
-    },
     confirmDeleteBuilding(buildingId) {
       this.buildingToDelete = buildingId;
       this.showDeleteModal = true;
     },
+
     deleteSelectedBuildings() {
       if (this.selectedBuildings.length === 0) {
         this.showError('Vui lòng chọn ít nhất một tòa nhà để xóa');
@@ -873,16 +943,19 @@ export default {
       this.buildingToDelete = this.selectedBuildings;
       this.showDeleteModal = true;
     },
+
     confirmDelete() {
       const buildingIds = Array.isArray(this.buildingToDelete)
         ? this.buildingToDelete
         : [this.buildingToDelete];
 
-      axios.delete('/api/buildings/delete/', { data: buildingIds })
+      const idsParam = buildingIds.join(",");
+
+      axios.delete(`/api/buildings/delete/${idsParam}`)
         .then(() => {
           this.showSuccess(
-            Array.isArray(this.buildingToDelete)
-              ? `Đã xóa ${this.buildingToDelete.length} tòa nhà thành công!`
+            buildingIds.length > 1
+              ? `Đã xóa ${buildingIds.length} tòa nhà thành công!`
               : 'Xóa tòa nhà thành công!'
           );
           this.loadBuildings();
@@ -895,12 +968,15 @@ export default {
           this.showError('Có lỗi xảy ra khi xóa tòa nhà');
         });
     },
+
     formatNumber(value) {
       return value ? value.toLocaleString() : '0';
     },
+
     formatCurrency(value) {
       return value ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value) : '0 ₫';
     },
+
     showSuccess(message) {
       this.successMessage = message;
       this.showSuccessNotification = true;
@@ -909,6 +985,7 @@ export default {
         this.showSuccessNotification = false;
       }, 3000);
     },
+
     showError(message) {
       this.successMessage = message;
       this.showSuccessNotification = true;
@@ -917,9 +994,10 @@ export default {
         this.showSuccessNotification = false;
       }, 3000);
     },
+
     closeModal() {
-      this.showAssignmentModal = false;
       this.showDeleteModal = false;
+      this.buildingToDelete = null;
     }
   }
 };

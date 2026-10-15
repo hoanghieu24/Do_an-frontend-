@@ -71,7 +71,7 @@
         </div>
         <h3 class="text-2xl font-medium text-gray-900 mb-3">Danh sách yêu thích trống</h3>
         <p class="text-gray-600 max-w-md mx-auto mb-6">Bạn chưa thêm bất động sản nào vào danh sách yêu thích.</p>
-        <router-link to="/properties"
+        <router-link to="/"
           class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-indigo-600 to-blue-500 hover:from-indigo-700 hover:to-blue-600 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-md">
           <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -95,7 +95,7 @@
             </div>
 
             <!-- Nút xóa yêu thích with better interaction -->
-            <button @click.stop="removeFavorite(customerId, property.id)"
+            <button @click.stop="removeFavorite(property.id)"
               class="absolute top-3 right-3 p-2 rounded-full bg-white/90 hover:bg-red-100 transition-all duration-300 z-10 shadow-md group-hover:scale-110 group/remove"
               aria-label="Remove from favorites">
               <svg class="w-6 h-6 transition-all duration-300" :class="{
@@ -106,10 +106,11 @@
               </svg>
             </button>
 
+
             <!-- Hình ảnh with parallax effect container -->
             <div class="property-image relative h-48 overflow-hidden">
               <div class="absolute inset-0 bg-gradient-to-t from-gray-900/30 to-transparent z-0"></div>
-              <img :src="getImageUrl(property.image)" :alt="property.nameBuilding"
+              <img :src="getImageUrl(property.image)" :alt="property.name || property.nameBuilding"
                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 loading="lazy">
               <!-- Giá with gradient background -->
@@ -153,7 +154,7 @@
                 <div
                   class="bg-gray-100 rounded-lg p-2 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 hover:shadow-inner">
                   <div class="text-gray-500 text-xs">Diện tích</div>
-                  <div class="font-semibold text-gray-900">{{ property.floorarea || '---' }} m²</div>
+                  <div class="font-semibold text-gray-900">{{ property.floorArea || property.floorarea || '---' }} m²</div>
                 </div>
                 <div
                   class="bg-gray-100 rounded-lg p-2 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 hover:shadow-inner">
@@ -163,7 +164,7 @@
                 <div
                   class="bg-gray-100 rounded-lg p-2 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 hover:shadow-inner">
                   <div class="text-gray-500 text-xs">Nhân viên</div>
-                  <div class="font-semibold text-gray-900">{{ property.staffid?.length || 0 }}</div>
+                  <div class="font-semibold text-gray-900">{{ property.staffIds?.length || property.staffid?.length || 0 }}</div>
                 </div>
               </div>
 
@@ -225,7 +226,7 @@
                     <h3 class="text-3xl leading-8 font-extrabold text-gray-900 mb-6 pb-4 border-b border-gray-200">
                       <span
                         class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 animate-gradient">
-                        {{ selectedProperty.nameBuilding }}
+                        {{ selectedProperty.name || selectedProperty.nameBuilding }}
                       </span>
                     </h3>
 
@@ -279,7 +280,7 @@
                             </div>
                             <div>
                               <h4 class="font-semibold text-gray-900">Địa Chỉ:</h4>
-                              <p class="text-gray-600 mt-1">{{ getFullAddress(property) }}</p>
+                              <p class="text-gray-600 mt-1">{{ getFullAddress(selectedProperty) }}</p>
                             </div>
                           </li>
                           <li class="flex items-start border-b border-gray-100 pb-4 animate-fade-in-up"
@@ -311,7 +312,7 @@
                             <div>
                               <h4 class="font-semibold text-gray-900">Giá thuê:</h4>
                               <p class="text-blue-600 font-bold text-lg mt-1">{{ formatPrice(selectedProperty.rentPrice)
-                                }}</p>
+                              }}</p>
                             </div>
                           </li>
 
@@ -328,7 +329,7 @@
                             </div>
                             <div>
                               <h4 class="font-semibold text-gray-900">Diện tích:</h4>
-                              <p class="text-gray-600 mt-1">{{ selectedProperty.floorarea || '---' }} m²</p>
+                              <p class="text-gray-600 mt-1">{{ selectedProperty.floorArea || selectedProperty.floorarea || '---' }} m²</p>
                             </div>
                           </li>
 
@@ -377,23 +378,35 @@
 
 <script setup>
 import { ref, onMounted, inject } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useToast } from 'vue-toastification'
 
+const router = useRouter()
 const toast = useToast()
 
 // API base
-const apiBase = 'http://localhost:8080/api/buildings'
+const apiBase = '/api/buildings'
 
-// Lấy customerId từ localStorage
-const rawUser = localStorage.getItem('user')
-const customerId = rawUser ? JSON.parse(rawUser).id?.[0] : null
+// 🧩 Lấy user id từ localStorage
+const getUserId = () => {
+  const rawUser = localStorage.getItem('currentUser') || localStorage.getItem('user')
+  if (!rawUser) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(rawUser)
+    const id = Array.isArray(parsed.id) ? parsed.id[0] : (parsed.id || parsed.customerId || parsed.customerid)
+    return id
+  } catch (e) {
+    console.error('❌ Lỗi parse user:', e)
+    return null
+  }
+}
 
 // Inject từ cha để đồng bộ trạng thái "yêu thích"
 const toggleFavoriteGlobal = inject('toggleFavorite', null) // optional fallback
-if (!toggleFavoriteGlobal) {
-  console.warn('⚠️ Không tìm thấy toggleFavoriteGlobal từ inject')
-}
 
 // State
 const favourites = ref([])
@@ -405,8 +418,11 @@ const getImageUrl = (path) => {
   if (!path) {
     return 'https://c1.klipartz.com/pngpicture/942/649/sticker-png-architecture-icon-house-icon-design-symbol-triangle-line-logo-roof.png'
   }
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path
+  }
   const cleanPath = path.startsWith('/') ? path.slice(1) : path
-  return `http://localhost:8080/img/${cleanPath}`
+  return `/img/${cleanPath}`
 }
 
 // Format tiền
@@ -418,7 +434,7 @@ const formatPrice = (price) => {
 // Lấy chi tiết toà nhà
 const fetchBuildingDetail = async (buildingId) => {
   try {
-    const res = await axios.get(`${apiBase}/${buildingId}`)
+    const res = await axios.get(`${apiBase}/${buildingId}/favourite`)
     return res.data
   } catch (error) {
     console.error(`❌ Lỗi khi fetch toà nhà ID ${buildingId}:`, error)
@@ -426,66 +442,72 @@ const fetchBuildingDetail = async (buildingId) => {
   }
 }
 
-// Lấy danh sách yêu thích
+// 📦 Gọi API lấy danh sách yêu thích
 const fetchFavourites = async () => {
+  const customerId = getUserId()
   if (!customerId) {
-    console.warn('❌ Không có customerId, không thể lấy danh sách yêu thích.')
+    loading.value = false
     return
   }
 
   loading.value = true
   try {
     const res = await axios.get(`${apiBase}/favorites/${customerId}`)
-    const rawFavourites = res.data || []
+    const rawFavourites = Array.isArray(res.data) ? res.data : []
 
-    const detailPromises = rawFavourites.map(fav => fetchBuildingDetail(fav.buildingId))
+    // Lọc các buildingId duy nhất, tránh trùng lặp
+    const uniqueBuildingIds = [...new Set(rawFavourites.map(fav => fav.buildingId).filter(Boolean))]
+
+    const detailPromises = uniqueBuildingIds.map(bId => fetchBuildingDetail(bId))
     const detailResults = await Promise.all(detailPromises)
 
     favourites.value = detailResults.filter(b => b && b.id)
-  } catch (error) {
-    console.error('❌ Lỗi khi lấy danh sách yêu thích:', error)
-    toast.error('Không thể tải danh sách yêu thích 😢')
+  } catch (err) {
+    console.error('🚨 Lỗi khi load danh sách yêu thích:', err)
+    toast.error('Không thể tải danh sách yêu thích')
   } finally {
     loading.value = false
   }
 }
 
-// Xoá khỏi yêu thích
-const removeFavorite = async (customerId, buildingId) => {
+// ❌ Xóa yêu thích
+const removeFavorite = async (buildingId) => {
+  const customerId = getUserId()
+  if (!customerId) {
+    toast.error('Không tìm thấy thông tin người dùng')
+    return
+  }
+
   try {
-    const res = await axios.post(`${apiBase}/favorites/remove`, {
-      customerId,
-      buildingId
+    await axios.post(`${apiBase}/favorites/remove`, {
+      userId: customerId,
+      customerId: customerId,
+      buildingId: buildingId
     })
 
-    if (res.data?.success === false) {
-      throw new Error(res.data.message || 'Xoá không thành công')
-    }
+    toast.success('Đã xoá khỏi danh sách yêu thích!')
 
-    toast.success('🗑️ Đã xoá khỏi danh sách yêu thích!')
-    
-    // Cập nhật local UI
-    favourites.value = favourites.value.filter(b => b.id !== buildingId)
+    // Cập nhật lại danh sách
+    favourites.value = favourites.value.filter(f => f.id !== buildingId)
 
-    // Gọi inject nếu có (để đồng bộ tim đỏ các nơi khác)
+    // Đồng bộ trạng thái global nếu có
     if (toggleFavoriteGlobal) {
       toggleFavoriteGlobal(buildingId)
     }
-  } catch (error) {
-    console.error('❌ Lỗi khi xoá favorite:', error)
-    toast.error('Xoá yêu thích thất bại 😓')
-    fetchFavourites() // fallback
+  } catch (err) {
+    console.error('🚨 Lỗi khi xóa yêu thích:', err)
+    toast.error('Xoá yêu thích thất bại')
+    fetchFavourites()
   }
 }
 
-// Mở modal chi tiết
 const openPropertyDetail = (property) => {
   selectedProperty.value = property
 }
 
-// Tạo địa chỉ đầy đủ
 const getFullAddress = (property) => {
   if (!property) return 'Đang cập nhật địa chỉ'
+  if (property.address) return property.address
 
   const {
     district = '',
@@ -494,22 +516,28 @@ const getFullAddress = (property) => {
   } = property
 
   const parts = []
-  if (district && district !== 'QUAN_0') parts.push(district)
-  if (ward) parts.push(ward)
   if (street) parts.push(street)
+  if (ward) parts.push(ward)
+  if (district && district !== 'QUAN_0') parts.push(district)
 
   return parts.length ? parts.join(', ') : 'Đang cập nhật địa chỉ'
 }
 
-// Khi mount thì fetch danh sách
 onMounted(() => {
+  const customerId = getUserId()
+  if (!customerId) {
+    loading.value = false
+    toast.info('Vui lòng đăng nhập để xem danh sách yêu thích')
+    router.push('/')
+    return
+  }
   fetchFavourites()
 })
 </script>
 
 
+
 <style scoped>
-/* Enhanced floating animation */
 @keyframes float1 {
 
   0%,
@@ -566,7 +594,7 @@ onMounted(() => {
   animation-delay: 3s;
 }
 
-/* Particle animations */
+
 .particle-1 {
   animation: particle-float 15s ease-in-out infinite;
 }
@@ -599,7 +627,7 @@ onMounted(() => {
   }
 }
 
-/* Fade in animations */
+
 @keyframes fadeIn {
   from {
     opacity: 0;

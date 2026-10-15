@@ -33,11 +33,14 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+
 defineProps({
   isOpen: Boolean
 })
 
-defineEmits(['close', 'openChat'])
+const emit = defineEmits(['close', 'openChat'])
+const router = useRouter()
 
 const navItems = [
   { name: 'Trang chủ', href: '/' },
@@ -51,7 +54,7 @@ const navItems = [
 const handleNavClick = (item) => {
   if (!item || !item.href) return
   // Đóng menu trước khi chuyển trang
-  $emit('close')
+  emit('close')
   // Chuyển route
   router.push(item.href)
 }

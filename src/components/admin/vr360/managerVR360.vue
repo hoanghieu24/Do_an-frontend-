@@ -984,19 +984,25 @@ export default {
       const file = event.target.files?.[0];
       if (!file) return;
 
-      // Max 20MB
-      if (file.size > 20 * 1024 * 1024) {
-        this.toast.error('Kích thước ảnh không được vượt quá 20MB');
+      // Max 25MB
+      if (file.size > 25 * 1024 * 1024) {
+        this.toast.error('Kích thước ảnh không được vượt quá 25MB');
         return;
       }
 
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-      if (!validTypes.includes(file.type)) {
-        this.toast.error('Chỉ chấp nhận file ảnh định dạng JPEG hoặc PNG');
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      const validExts = ['jpg', 'jpeg', 'png', 'webp'];
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type) && !validExts.includes(ext)) {
+        this.toast.error('Chỉ chấp nhận file ảnh định dạng JPG, JPEG, PNG, WEBP');
         return;
       }
 
       this.newSceneForm.file = file;
+      if (!this.newSceneForm.name) {
+        const baseName = file.name.replace(/\.[^/.]+$/, "");
+        this.newSceneForm.name = baseName;
+      }
 
       const reader = new FileReader();
       reader.onload = (e) => {

@@ -149,28 +149,28 @@
       </div>
 
       <!-- Card for management information -->
-      <div class="card form-card">
-        <div class="card-header">
-          <h5><i class="fas fa-user-tie"></i> THÔNG TIN QUẢN LÝ</h5>
-        </div>
-        <div class="card-body">
-          <div class="row">
-            <!-- Tên quản lý -->
-            <div class="col-md-6">
-              <div class="form-group">
-              
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Nhân viên phụ trách</label>
-                  <select v-model="building.staffId"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                    <option value="">Chọn nhân viên...</option>
-                    <option v-for="staff in staffs" :value="staff.id" :key="staff.id">{{ staff.fullName }}</option>
-                  </select>
-              </div>
-            </div>
-          
-          </div>
-        </div>
+      <div class="form-group">
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Nhân viên phụ trách
+        </label>
+
+        <!-- MANAGER / ADMIN -->
+        <select v-if="userRole !== 'ROLE_STAFF'" v-model="building.staffIds">
+
+          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500
+          sm:text-sm">
+          <option value="">Chọn nhân viên...</option>
+          <option v-for="staff in staffs" :key="staff.id" :value="staff.id">
+            {{ staff.fullName }}
+          </option>
+        </select>
+
+        <!-- STAFF -->
+        <input v-else type="text" :value="myName" disabled />
+
       </div>
+
+
 
       <!-- Card for building type -->
       <div class="card form-card">
@@ -187,6 +187,28 @@
                   {{ label }}
                 </label>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload ảnh -->
+      <div class="card form-card">
+        <div class="card-header">
+          <h5><i class="fas fa-image"></i> HÌNH ẢNH</h5>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Hình đại diện</label>
+            <div class="image-upload-container">
+              <div class="image-preview" @click="$refs.fileInput.click()">
+                <img :src="previewImage || defaultImage" alt="Preview" class="preview-image" />
+                <div class="image-overlay">
+                  <i class="fas fa-camera"></i>
+                  <p>Chọn hình ảnh</p>
+                </div>
+              </div>
+              <input type="file" ref="fileInput" @change="onImageChange" class="d-none" accept="image/*" />
             </div>
           </div>
         </div>
@@ -238,44 +260,91 @@ export default {
         managerName: "",
         managerPhone: "",
         typeCode: [],
-        note: ""
+        note: "",
       },
       districts: {},
       rentTypes: {},
+      staffIds: [],
       errorMessage: "",
       successMessage: "",
-      loading: false
+      loading: false,
+
+      // 👇 thêm cho upload ảnh
+      previewImage: null,
+      defaultImage: "/admin/image/default.png",
+      imageBase64: "",
+      imageName: ""
     };
   },
+  computed: {
+    userRole() {
+      const user = JSON.parse(localStorage.getItem("currentUser"));
+      if (!user || !user.roles || user.roles.length === 0) return null;
+      return user.roles[0]; // "ROLE_STAFF" hoặc "ROLE_MANAGER"
+    },
+    currentUserId() {
+      const user = JSON.parse(localStorage.getItem("currentUser"));
+      return user ? user.id : null;
+    },
+    myName() {
+      const user = JSON.parse(localStorage.getItem("currentUser"));
+      return user ? user.fullname : "Bạn";
+    }
+  },
+
   async mounted() {
     await this.fetchInitialData();
+    if (this.userRole === "ROLE_STAFF") {
+      this.building.staffIds = [this.currentUserId];
+    }
+
+
+
   },
   methods: {
     async fetchInitialData() {
-  try {
-    const [districtsRes, rentTypesRes, staffsRes] = await Promise.all([
-      axios.get('/api/buildings/districts'),
-      axios.get('/api/buildings/rent-types'),
-      axios.get('/api/buildings/staffs')
-    ]);
+      try {
+        const [districtsRes, rentTypesRes, staffsRes] = await Promise.all([
+          axios.get('/api/buildings/districts'),
+          axios.get('/api/buildings/rent-types'),
+          axios.get('/api/buildings/staffs')
+        ]);
 
-    this.districts = districtsRes.data;
-    this.rentTypes = rentTypesRes.data;
-    this.staffs = staffsRes.data; // 👈 gán dữ liệu vào staffs
-  } catch (error) {
-    console.error('Lỗi khi tải dữ liệu:', error);
-    this.errorMessage = 'Không thể tải dữ liệu khởi tạo. Vui lòng thử lại.';
-  }
-},
+        this.districts = districtsRes.data;
+        this.rentTypes = rentTypesRes.data;
+        this.staffs = staffsRes.data;
+      } catch (error) {
+        console.error('Lỗi khi tải dữ liệu:', error);
+        this.errorMessage = 'Không thể tải dữ liệu khởi tạo. Vui lòng thử lại.';
+      }
+    },
 
+    onImageChange(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      this.imageName = file.name;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.imageBase64 = e.target.result;
+        this.previewImage = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    },
 
     async handleSubmit() {
-      // Validate dữ liệu
+      if (this.userRole === "ROLE_STAFF") {
+        this.building.staffIds = [this.currentUserId];
+      }
+
+
+
+
       if (!this.building.name) {
         this.errorMessage = 'Vui lòng nhập tên tòa nhà!';
         return;
       }
-
       if (this.building.typeCode.length === 0) {
         this.errorMessage = 'Vui lòng chọn ít nhất một loại tòa nhà!';
         return;
@@ -285,28 +354,16 @@ export default {
       this.loading = true;
 
       try {
-        // Chuẩn bị dữ liệu để gửi lên server
         const buildingData = {
-          name: this.building.name,
-          district: this.building.district,
-          ward: this.building.ward,
-          street: this.building.street,
-          structure: this.building.structure,
-          numberOfBasement: this.building.numberOfBasement || 0,
-          floorArea: this.building.floorArea || 0,
-          direction: this.building.direction,
-          level: this.building.level,
-          rentalArea: this.building.rentalArea || 0,
-          rentPrice: this.building.rentPrice || 0,
-          serviceFee: this.building.serviceFee || 0,
-          brokerageFee: this.building.brokerageFee || 0,
-          managerName: this.building.managerName,
-          managerPhone: this.building.managerPhone,
-          typeCode: this.building.typeCode,
-          note: this.building.note
+          ...this.building
         };
 
-        // Gọi API để tạo tòa nhà mới
+        // Nếu có ảnh thì thêm vào payload
+        if (this.imageBase64) {
+          buildingData.imageBase64 = this.imageBase64;
+          buildingData.imageName = this.imageName;
+        }
+
         const response = await axios.post('/api/buildings', buildingData);
 
         this.successMessage = "Thêm tòa nhà thành công!";
@@ -330,16 +387,17 @@ export default {
           managerPhone: "",
           typeCode: [],
           note: "",
-          staffs: []
+          staffId: ""
         };
+        this.previewImage = null;
+        this.imageBase64 = "";
+        this.imageName = "";
 
-        // Chuyển hướng về trang danh sách sau 2 giây
         setTimeout(() => {
           this.$router.push("/admin/manager-building");
         }, 2000);
       } catch (error) {
         console.error('Lỗi khi thêm tòa nhà:', error);
-
         if (error.response && error.response.status === 400) {
           this.errorMessage = "Dữ liệu không hợp lệ: " + (error.response.data.message || "Vui lòng kiểm tra lại thông tin");
         } else if (error.response && error.response.status === 401) {
@@ -359,7 +417,6 @@ export default {
     },
   },
 };
-
 </script>
 
 <style scoped>
@@ -549,6 +606,52 @@ export default {
   color: #e74c3c !important;
 }
 
+.image-upload-container {
+  text-align: center;
+}
+
+.image-preview {
+  position: relative;
+  width: 200px;
+  height: 150px;
+  margin: 0 auto;
+  cursor: pointer;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.image-preview:hover {
+  border-color: #3498db;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.image-preview:hover .image-overlay {
+  opacity: 1;
+}
+
 @media (max-width: 768px) {
   .building-form-container {
     padding: 15px;
@@ -570,6 +673,52 @@ export default {
 
   .card-body {
     padding: 15px;
+  }
+
+  .image-upload-container {
+    text-align: center;
+  }
+
+  .image-preview {
+    position: relative;
+    width: 200px;
+    height: 150px;
+    margin: 0 auto;
+    cursor: pointer;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+
+  .image-preview:hover {
+    border-color: #3498db;
+  }
+
+  .preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .image-preview:hover .image-overlay {
+    opacity: 1;
   }
 }
 </style>

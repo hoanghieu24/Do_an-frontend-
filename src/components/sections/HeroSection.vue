@@ -1,352 +1,166 @@
 <template>
-  <section class="relative w-full h-screen bg-indigo-900 text-white flex items-center justify-center overflow-hidden">
-    <!-- Dynamic Gradient Background with Parallax -->
-    <div class="absolute inset-0 bg-gradient-to-br from-indigo-900 via-indigo-800 to-purple-700 opacity-95">
-      <div
-        class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=2073&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay"
-        :style="{ 'transform': `translateY(${parallaxOffset * 0.5}px)` }"></div>
+  <section class="relative w-full min-h-[92vh] flex items-center justify-center bg-slate-950 text-white overflow-hidden pt-16">
+    <!-- Background Image với hiệu ứng Dark Architectural Overlay -->
+    <div class="absolute inset-0 z-0">
+      <img
+        src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop"
+        alt="Luxury Modern Architecture"
+        class="w-full h-full object-cover object-center transform scale-105 transition-transform duration-1000 ease-out"
+      />
+      <!-- Multi-layer gradient để chữ đọc siêu rõ nét và sang trọng -->
+      <div class="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-slate-900/60"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/50"></div>
     </div>
 
-    <!-- 3D Floating Particles -->
-    <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-      <div v-for="(particle, index) in particles" :key="index" class="absolute rounded-full" :class="particle.color"
-        :style="{
-          top: `${particle.top}%`,
-          left: `${particle.left}%`,
-          width: `${particle.size}px`,
-          height: `${particle.size}px`,
-          animation: `float${particle.animation} ${8 + index}s ease-in-out infinite`,
-          transform: `translateY(${parallaxOffset * particle.parallaxFactor}px)`
-        }"></div>
-    </div>
+    <!-- Architectural Grid Lines (tinh tế, mờ nhẹ) -->
+    <div class="absolute inset-0 z-0 opacity-10 pointer-events-none bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:32px_32px]"></div>
 
-    <!-- Main Content with 3D Perspective -->
-    <div class="w-full px-8 sm:px-16 lg:px-64 py-32 relative z-10 text-center"
-      :style="{ 'transform': `perspective(1000px) rotateX(${tiltY * 2}deg) rotateY(${-tiltX * 2}deg)` }">
-      <div class="max-w-5xl mx-auto transform transition-all duration-1000 ease-out"
-        :class="{ 'translate-y-0 opacity-100': loaded, 'translate-y-10 opacity-0': !loaded }">
+    <!-- Main Hero Content -->
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
+      <div class="max-w-3xl">
+        
+        <!-- Premium Brand Pill -->
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/80 backdrop-blur-md mb-6 shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-xs font-semibold tracking-wider uppercase text-slate-300">
+            Hider Real Estate · Khảo sát thực tế ảo 360°
+          </span>
+        </div>
 
-        <!-- 3D Text Effect -->
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-          <span v-for="(char, index) in titleChars" :key="index" class="inline-block relative" :style="{
-            animation: `textWave 1.5s ease-in-out ${index * 0.05}s infinite`,
-            textShadow: `${-tiltX * 2}px ${tiltY * 2}px 10px rgba(0,0,0,0.3)`
-          }">
-            {{ char === ' ' ? '&nbsp;' : char }}
+        <!-- Headline chính -->
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15] mb-6">
+          Khám Phá Không Gian Làm Việc <br class="hidden sm:inline" />
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-sky-400">
+            & Tòa Nhà Đẳng Cấp
           </span>
         </h1>
 
-        <!-- Gradient Text with Glow -->
-      <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed group">
-  <!-- Logo + chữ -->
-  <span 
-    class="inline-flex items-center opacity-0 animate-fade-in text-4xl md:text-5xl font-bold mb-4 tracking-wider transition-transform duration-300 group-hover:scale-110"
-    style="animation-delay: 1s"
-  
-  >
-    <img 
-      src="@/assets/logo.png" 
-      alt="Logo"
-      class="w-24 h-24 mr-2"
-    />
-    HIDEVERSE
-  </span>
+        <!-- Subtitle -->
+        <p class="text-base sm:text-lg lg:text-xl text-slate-300 mb-10 leading-relaxed font-normal max-w-2xl">
+          Nền tảng quản lý và kết nối thuê bất động sản văn phòng hàng đầu. Trực quan hóa từng góc nhìn với công nghệ
+          <span class="text-emerald-400 font-semibold">Tour VR 360°</span> chân thực, giúp doanh nghiệp tiết kiệm 80% thời gian khảo sát thực địa.
+        </p>
 
-  <br>
-
-  <!-- Subtitle -->
-  <span 
-    v-for="(text, index) in subtitleTexts" 
-    :key="index" 
-    class="inline-block opacity-0 animate-fade-in"
-    :style="`animation-delay: ${1.3 + index * 0.3}s`"
-  >
-    {{ text }}
-  </span>
-</p>
-
-
-        <!-- 3D Buttons with Hover Effects -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-
-
+        <!-- CTA Buttons Row -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-16">
+          <!-- Button 1: Xem bất động sản -->
           <button
-  class="relative z-10 flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 ease-in-out"
-  @click="scrollTopropertylist"
->
-  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-    <path
-      fill-rule="evenodd"
-      d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2H5a1 1 0 010-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z"
-      clip-rule="evenodd"
-    />
-  </svg>
-  Xem bất động sản
-</button>
+            @click="scrollTopropertylist"
+            class="inline-flex items-center justify-center gap-3 px-7 py-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base shadow-xl shadow-emerald-950/40 hover:shadow-emerald-900/60 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0"
+          >
+            <svg class="w-5 h-5 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <span>Khám phá danh mục tòa nhà</span>
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          </button>
 
-          <span
-            class="absolute inset-0 bg-gradient-to-r from-white to-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
+          <!-- Button 2: Trải nghiệm VR 360 -->
+          <button
+            @click="openFlagshipVR"
+            class="inline-flex items-center justify-center gap-2.5 px-6 py-4 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-white font-semibold text-base border border-slate-700/80 backdrop-blur-md shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0"
+          >
+            <svg class="w-5 h-5 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <span>Trải nghiệm VR 360° mẫu</span>
+          </button>
 
-
-          <button @click="$emit('openChat')"
-            class="px-8 py-3 border-2 border-white text-white font-medium rounded-lg hover:bg-white hover:text-indigo-700 transition-all duration-300 shadow-lg text-center transform hover:-translate-y-1 hover:shadow-xl active:scale-95 animate-button-pop relative overflow-hidden group"
-            style="animation-delay: 1.8s" :style="{
-              transform: `translate3d(0,0,0) perspective(1000px) rotateX(${tiltY * 0.5}deg) rotateY(${-tiltX * 0.5}deg)`
-            }">
-            <span class="relative z-10 flex items-center justify-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd"
-                  d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
-                  clip-rule="evenodd" />
-              </svg>
-              Tư vấn ngay
-            </span>
-            <span
-              class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-500"></span>
+          <!-- Button 3: Tư vấn ngay -->
+          <button
+            @click="goToHomeAndScrollContactSection"
+            class="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 font-medium text-base transition-colors"
+          >
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+            <span>Tư vấn trực tiếp</span>
           </button>
         </div>
+
+        <!-- Real Estate Trust Metrics Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-8 border-t border-slate-800/80">
+          <div class="border-l-2 border-emerald-500 pl-4 py-1">
+            <div class="text-2xl sm:text-3xl font-extrabold text-white">15+</div>
+            <div class="text-xs text-slate-400 uppercase tracking-wider font-medium mt-0.5">Tòa nhà tiêu biểu</div>
+          </div>
+          <div class="border-l-2 border-emerald-500 pl-4 py-1">
+            <div class="text-2xl sm:text-3xl font-extrabold text-emerald-400">100%</div>
+            <div class="text-xs text-slate-400 uppercase tracking-wider font-medium mt-0.5">Khảo sát VR 360°</div>
+          </div>
+          <div class="border-l-2 border-emerald-500 pl-4 py-1">
+            <div class="text-2xl sm:text-3xl font-extrabold text-white">0 đ</div>
+            <div class="text-xs text-slate-400 uppercase tracking-wider font-medium mt-0.5">Phí dịch vụ khách thuê</div>
+          </div>
+          <div class="border-l-2 border-emerald-500 pl-4 py-1">
+            <div class="text-2xl sm:text-3xl font-extrabold text-white">24/7</div>
+            <div class="text-xs text-slate-400 uppercase tracking-wider font-medium mt-0.5">Đồng hành pháp lý</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- Animated Bottom Border -->
-    <div class="absolute bottom-0 left-0 right-0 h-16 bg-white transform translate-y-1/2 flex justify-center"
-      :style="{ 'transform': `translateY(50%) rotateX(${tiltY * 0.3}deg)` }">
-      <div class="w-24 h-1 bg-indigo-400 rounded-full mt-2 animate-pulse"
-        :style="{ 'transform': `scaleX(${1 + Math.abs(tiltX) * 0.1})` }"></div>
-    </div>
-
-    <!-- Interactive Scroll Indicator -->
-    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce cursor-pointer" @click="scrollDown"
-      :style="{ 'transform': `translateX(-50%) translateY(${tiltY * 2}px)` }">
-      <svg class="w-6 h-6 text-white hover:text-indigo-300 transition-colors" fill="none" stroke="currentColor"
-        viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-      </svg>
+    <!-- Subtle Scroll Down Indicator -->
+    <div
+      class="absolute bottom-6 left-1/2 transform -translate-x-1/2 cursor-pointer z-10 text-slate-400 hover:text-white transition-colors"
+      @click="scrollDown"
+      title="Cuộn xuống"
+    >
+      <div class="flex flex-col items-center gap-1.5">
+        <span class="text-[11px] tracking-widest uppercase font-medium">Cuộn xem</span>
+        <svg class="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7" />
+        </svg>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
-const loaded = ref(false)
-const tiltX = ref(0)
-const tiltY = ref(0)
-const parallaxOffset = ref(0)
-
-const title = "Tìm ngôi nhà mơ ước"
-const titleChars = ref(title.split(''))
-const subtitleTexts = ["Hàng ngàn bất động sản cao cấp đang chờ đón bạn.", " Khám phá ngay!"]
-
-const particles = ref([
-  { top: 20, left: 10, size: 64, color: 'bg-purple-400 opacity-20', animation: 1, parallaxFactor: 0.3 },
-  { top: 30, left: 80, size: 96, color: 'bg-white opacity-10', animation: 2, parallaxFactor: 0.2 },
-  { top: 70, left: 25, size: 80, color: 'bg-indigo-300 opacity-15', animation: 3, parallaxFactor: 0.4 },
-  { top: 40, left: 60, size: 40, color: 'bg-pink-300 opacity-15', animation: 1, parallaxFactor: 0.5 },
-  { top: 60, left: 70, size: 60, color: 'bg-blue-300 opacity-10', animation: 2, parallaxFactor: 0.3 }
-])
-
-const glowColors = ['#a5b4fc', '#818cf8', '#c7d2fe', '#a78bfa']
-const glowColor = ref(glowColors[0])
-
-onMounted(() => {
-  setTimeout(() => {
-    loaded.value = true
-  }, 100)
-
-  // Change glow color every 3 seconds
-  const glowInterval = setInterval(() => {
-    const currentIndex = glowColors.indexOf(glowColor.value)
-    const nextIndex = (currentIndex + 1) % glowColors.length
-    glowColor.value = glowColors[nextIndex]
-  }, 3000)
-
-  // Mouse move effect
-  const handleMouseMove = (e) => {
-    const x = e.clientX / window.innerWidth
-    const y = e.clientY / window.innerHeight
-    tiltX.value = (x - 0.5) * 10
-    tiltY.value = (y - 0.5) * 10
-  }
-
-  // Scroll effect for parallax
-  const handleScroll = () => {
-    parallaxOffset.value = window.scrollY
-  }
-
-  window.addEventListener('mousemove', handleMouseMove)
-  window.addEventListener('scroll', handleScroll)
-
-  onUnmounted(() => {
-    clearInterval(glowInterval)
-    window.removeEventListener('mousemove', handleMouseMove)
-    window.removeEventListener('scroll', handleScroll)
-  })
-})
+const router = useRouter()
+const route = useRoute()
 
 const scrollDown = () => {
   window.scrollTo({
-    top: window.innerHeight,
+    top: window.innerHeight * 0.85,
     behavior: 'smooth'
   })
 }
 
-const scrollTopropertylist = () => {
-  const element = document.getElementById('property-section')
+const openFlagshipVR = () => {
+  // Mở VR của tòa nhà tiêu biểu (building 101 hoặc 1)
+  window.open('/vtour/pannellum.html?buildingId=101', '_blank')
+}
+
+const goToHomeAndScrollContactSection = async () => {
+  if (route.path !== '/') {
+    await router.push({ path: '/', query: { scrollTo: 'contact' } })
+    setTimeout(scrollContactSection, 500)
+  } else {
+    scrollContactSection()
+  }
+}
+
+const scrollContactSection = () => {
+  const element = document.getElementById('contact-section')
   if (element) {
     const header = document.querySelector('nav')
-    const offset = element.getBoundingClientRect().top + window.scrollY - header.offsetHeight - 20
+    const offset = element.getBoundingClientRect().top + window.scrollY - (header?.offsetHeight || 0) - 20
+    window.scrollTo({ top: offset, behavior: 'smooth' })
+  }
+}
+
+const scrollTopropertylist = () => {
+  const element = document.getElementById('property-section') || document.getElementById('propertylist-section')
+  if (element) {
+    const header = document.querySelector('nav')
+    const offset = element.getBoundingClientRect().top + window.scrollY - (header?.offsetHeight || 0) - 20
     window.scrollTo({ top: offset, behavior: 'smooth' })
   }
 }
 </script>
-
-<style scoped>
-/* Particle Animations */
-@keyframes float1 {
-
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-
-  50% {
-    transform: translate(20px, 30px) rotate(5deg);
-  }
-}
-
-@keyframes float2 {
-
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-
-  50% {
-    transform: translate(-15px, 20px) rotate(-3deg);
-  }
-}
-
-@keyframes float3 {
-
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-
-  50% {
-    transform: translate(10px, -15px) rotate(2deg);
-  }
-}
-
-/* Text Wave Animation */
-@keyframes textWave {
-
-  0%,
-  100% {
-    transform: translateY(0) translateZ(0);
-    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
-  }
-
-  50% {
-    transform: translateY(-10px) translateZ(20px);
-    text-shadow: 0 10px 20px rgba(255, 255, 255, 0.3);
-  }
-}
-
-/* Fade In Animation */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px) translateZ(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) translateZ(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-/* Button Pop Animation */
-@keyframes buttonPop {
-  0% {
-    opacity: 0;
-    transform: scale(0.8) translateZ(0);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1) translateZ(0);
-  }
-}
-
-.animate-button-pop {
-  opacity: 0;
-  animation: buttonPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-/* Gradient Background Animation */
-.bg-gradient-to-br {
-  background-size: 200% 200%;
-  animation: gradientBG 15s ease infinite;
-}
-
-@keyframes gradientBG {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-/* Pulse Animation for Bottom Line */
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 0.7;
-    transform: scaleX(1);
-  }
-
-  50% {
-    opacity: 1;
-    transform: scaleX(1.2);
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Bounce Animation for Scroll Indicator */
-@keyframes bounce {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.animate-bounce {
-  animation: bounce 1.5s infinite;
-}
-
-/* 3D Perspective Container */
-.perspective-container {
-  transform-style: preserve-3d;
-}
-</style>

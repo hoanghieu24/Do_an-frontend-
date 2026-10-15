@@ -15,33 +15,68 @@ export default defineConfig({
     }
   },
   server: {
+    host: '0.0.0.0',
+    allowedHosts: true,
     proxy: {
+      '/ws': {
+        target: 'http://localhost:8080',
+        ws: true,
+        changeOrigin: true,
+        headers: {
+          Origin: 'http://localhost:5173',
+          Referer: 'http://localhost:5173/'
+        }
+      },
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        headers: {
+          Origin: 'http://localhost:5173',
+          Referer: 'http://localhost:5173/'
+        }
       },
       '/j_spring_security_check': {
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
-        rewrite: (p) => p
+        rewrite: (p) => p,
+        headers: {
+          Origin: 'http://localhost:5173',
+          Referer: 'http://localhost:5173/'
+        }
       },
       '/login': {
         target: 'http://localhost:8080',
-        changeOrigin: true
+        changeOrigin: true,
+        headers: {
+          Origin: 'http://localhost:5173',
+          Referer: 'http://localhost:5173/'
+        }
       },
       '/vtour': {
         target: 'http://localhost:8080',
-        changeOrigin: true
+        changeOrigin: true,
+        headers: {
+          Origin: 'http://localhost:5173',
+          Referer: 'http://localhost:5173/'
+        }
       },
       '/uploads': {
         target: 'http://localhost:8080',
-        changeOrigin: true
+        changeOrigin: true,
+        headers: {
+          Origin: 'http://localhost:5173',
+          Referer: 'http://localhost:5173/'
+        }
       },
       '/img': {
         target: 'http://localhost:8080',
-        changeOrigin: true
+        changeOrigin: true,
+        headers: {
+          Origin: 'http://localhost:5173',
+          Referer: 'http://localhost:5173/'
+        }
       }
     }
   }

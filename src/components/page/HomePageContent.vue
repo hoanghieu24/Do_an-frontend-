@@ -1,11 +1,9 @@
 <template>
-  <div>
+  <div class="min-h-screen bg-slate-50 text-slate-800">
     <HeroSection />
-    <FilterSection @search="handleSearch" />
-
-    <!-- Section cần gắn id -->
+    
     <div id="propertylist-section">
-      <PropertyList :properties="filteredProperties" />
+      <PropertySearchWrapper />
     </div>
 
     <div id="agents-section">
@@ -20,26 +18,24 @@
       <ContactForm />
     </div>
 
-    <ResetButton class="p-4 bg-red-500 text-white" />
+    <HiderAI ref="chatbot" />
+    <ResetButton />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 
 import HeroSection from '../sections/HeroSection.vue'
-import FilterSection from '../FilterSection.vue'
-import PropertyList from '../property/PropertyList.vue'
 import AgentSection from '../agents/AgentSection.vue'
 import Testimonials from '../Testimonials.vue'
 import ContactForm from '../ContactForm.vue'
 import ResetButton from '../common/reset.vue'
-
-import { properties } from '@/data/properties'
+import PropertySearchWrapper from '../property/PropertySearchWrapper.vue'
 import { agents } from '@/data/agents'
+import HiderAI from '../HiderAI.vue'
 
-// Scroll theo query string
 const route = useRoute()
 
 const scrollToSection = (id) => {
@@ -69,26 +65,4 @@ onMounted(async () => {
     }
   }
 })
-
-// Filter logic
-const searchCriteria = ref({})
-const propertiesData = ref(properties)
-
-const filteredProperties = computed(() => {
-  return propertiesData.value.filter(property => {
-    return Object.entries(searchCriteria.value).every(([key, value]) => {
-      if (!value) return true
-      if (key === 'price') {
-        const price = parseFloat(property.price.replace(/[^\d.]/g, ''))
-        const [min, max] = value.split('-').map(Number)
-        return price >= min && (!max || price <= max)
-      }
-      return property[key].toString().toLowerCase().includes(value.toLowerCase())
-    })
-  })
-})
-
-const handleSearch = (criteria) => {
-  searchCriteria.value = criteria
-}
 </script>

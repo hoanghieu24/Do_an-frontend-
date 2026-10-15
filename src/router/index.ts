@@ -133,8 +133,15 @@ const router = createRouter({
 
 // ✅ Navigation Guard
 router.beforeEach((to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
-  const storedUser = localStorage.getItem('currentUser')
-  const user = storedUser ? JSON.parse(storedUser) : null
+  let user = null
+  try {
+    const storedUser = localStorage.getItem('currentUser') || localStorage.getItem('user')
+    if (storedUser && storedUser !== 'undefined' && storedUser !== 'null') {
+      user = JSON.parse(storedUser)
+    }
+  } catch (e) {
+    console.error('Error parsing stored user in router guard:', e)
+  }
 
   console.log('🔍 Chuyển trang tới:', to.fullPath)
   console.log('👤 Dữ liệu user:', user)
